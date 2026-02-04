@@ -2,7 +2,6 @@ Super projet rust
 Features actuellement implémentées:
 Obfuscation:
   - Strings chiffrés (obfstr)
-  - Control Flow Flattening (goldberg)
 Packing:
   - Pas de compression
   - Chiffrement (seuleemnt un xor pour le moment)
