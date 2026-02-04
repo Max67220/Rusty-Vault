@@ -33,4 +33,4 @@ Détection automatique du type de fichier d'entrée :
 
 ### A faire
 Renforcer le chiffrement, compléter l'antidebug, implémenter le control flow flattening, implémenter le swap de fonction par hooking de l'iat au runtime.
----
+
