@@ -2,7 +2,6 @@ mod detector;
 mod builder;
 mod packer;
 mod constants;
-mod cypher;
 
 use std::env;
 use std::process::exit;
