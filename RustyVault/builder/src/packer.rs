@@ -1,5 +1,4 @@
 use crate::cypher;
-
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
