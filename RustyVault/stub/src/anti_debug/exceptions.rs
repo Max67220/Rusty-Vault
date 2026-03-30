@@ -86,10 +86,13 @@ unsafe extern "system" fn unhandled_exception_filter(exception_info: *const wind
 #[cfg(windows)]
 unsafe extern "system" fn check_handler(info: *mut EXCEPTION_POINTERS) -> i32 {
     EXCEPTION_HIT = true;
-    
     let ctx = (*info).ContextRecord;
-    (*ctx).Rip += 1; 
-
+    //jai mis ça pour detecter des les hardwarebreakpoint
+    if (*ctx).Dr0 != 0 || (*ctx).Dr1 != 0 || (*ctx).Dr2 != 0 || (*ctx).Dr3 != 0 {
+        // le mossad suicide le programme si besoin
+        windows_sys::Win32::System::Threading::ExitProcess(1);
+    }
+    (*ctx).Rip += 1; //int3
     EXCEPTION_CONTINUE_EXECUTION
 }
 
@@ -97,15 +100,13 @@ unsafe extern "system" fn check_handler(info: *mut EXCEPTION_POINTERS) -> i32 {
 fn raise_exception_check() -> bool {
     unsafe {
         EXCEPTION_HIT = false;
-        
         let handle = AddVectoredExceptionHandler(1, Some(check_handler));
         
         if !handle.is_null() {
-            core::arch::asm!("int3");
-            
+            core::arch::asm!("int3"); 
+            RemoveVectoredExceptionHandler(handle);
         }
-
-        !EXCEPTION_HIT
+        !EXCEPTION_HIT 
     }
 }
 

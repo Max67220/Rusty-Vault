@@ -75,6 +75,21 @@ pub fn nt_query_information_process() -> bool
     corrupted_mode
 }
 
+#[cfg(windows)]
+pub fn hide_thread_from_debugger() {
+	//SI JARRIVE A EXECUTER SOUS X64DBG APRES CA C FINITO
+    unsafe {
+        let h_ntdll: HMODULE = LoadLibraryA(b"ntdll.dll\0".as_ptr());
+        if !h_ntdll.is_null() {
+            let func = GetProcAddress(h_ntdll, b"NtSetInformationThread\0".as_ptr());
+
+            if func.is_some() {
+                let nt_set_thread: extern "system" fn(isize, u32, *const libc::c_void, u32) -> NTSTATUS = std::mem::transmute(func);
+                nt_set_thread(-2isize, 0x11, std::ptr::null(), 0);
+            }
+        }
+    }
+}
 // ===============================
 // HEAP CHECK
 // ===============================
@@ -128,7 +143,7 @@ pub fn check_kuser_shared_data_structure() -> bool
 pub fn debugger_check() -> bool 
 {
     let mut corrupted_mode = false;
-
+	hide_thread_from_debugger();
     unsafe 
     {
         if IsDebuggerPresent() != 0 
