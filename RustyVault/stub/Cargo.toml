@@ -15,5 +15,18 @@ winapi = { version = "0.3", features = [
     "handleapi", "libloaderapi", "basetsd", "debugapi", "tlhelp32"
 ]}
 
+[dependencies.windows-sys]
+version = "0.61.2" # or your current version
+features = [
+    "Win32",
+    "Win32_System_Performance",
+    "Win32_System_SystemInformation",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_Foundation",
+    "Win32_System_Threading",
+	"Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Kernel"
+]
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"

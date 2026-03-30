@@ -1,6 +1,6 @@
 use std::ffi::CString;
 use std::ptr;
-
+use winapi::um::libloaderapi::{GetProcAddress,GetModuleHandleA};
 
 pub struct RogueCipher {
     round_keys: [[u64; 2]; 12],

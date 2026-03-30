@@ -10,10 +10,11 @@ use windows_sys::Win32::{
         Diagnostics::Debug::{IsDebuggerPresent, CheckRemoteDebuggerPresent},
         Threading::{GetCurrentProcess, GetCurrentProcessId},
         LibraryLoader::{LoadLibraryA, GetProcAddress},
-        Memory::{GetProcessHeap, HeapWalk, PROCESS_HEAP_ENTRY, PROCESS_HEAP_ENTRY_BUSY},
+        Memory::{GetProcessHeap, HeapWalk, PROCESS_HEAP_ENTRY},
     },
     Foundation::{HMODULE},
 };
+const PROCESS_HEAP_ENTRY_BUSY: u16 = 4;
 
 // ===============================
 // NT TYPES
@@ -42,18 +43,18 @@ pub fn nt_query_information_process() -> bool
     {
         let h_ntdll: HMODULE = LoadLibraryA(b"ntdll.dll\0".as_ptr());
 
-        if h_ntdll != 0 
+        if !h_ntdll.is_null()
         {
             let func = GetProcAddress(h_ntdll, b"NtQueryInformationProcess\0".as_ptr());
 
-            if !func.is_null() 
+            if func.is_some()
             {
                 let nt_query: extern "system" fn(isize,u32,*mut u32,u32,*mut u32,) -> NTSTATUS = std::mem::transmute(func);
 
                 let mut debug_port: u32 = 0;
                 let mut returned: u32 = 0;
 
-                let status = nt_query(GetCurrentProcess(),PROCESS_DEBUG_PORT,&mut debug_port,std::mem::size_of::<u32>() as u32,&mut returned);
+				let status = nt_query(GetCurrentProcess() as isize, PROCESS_DEBUG_PORT, &mut debug_port, std::mem::size_of::<u32>() as u32, &mut returned);
 
                 if nt_success(status) && debug_port == u32::MAX {
                     corrupted_mode = true;
@@ -61,7 +62,7 @@ pub fn nt_query_information_process() -> bool
 
                 let mut debug_flags: u32 = 0;
 
-                let status = nt_query(GetCurrentProcess(),PROCESS_DEBUG_FLAGS,&mut debug_flags,std::mem::size_of::<u32>() as u32,&mut returned);
+                let status = nt_query(GetCurrentProcess() as isize, PROCESS_DEBUG_FLAGS, &mut debug_flags, std::mem::size_of::<u32>() as u32, &mut returned);
 
                 if nt_success(status) && debug_flags == 0 
                 {

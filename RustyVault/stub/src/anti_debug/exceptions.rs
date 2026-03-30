@@ -1,3 +1,4 @@
+
 // ===============================
 // WINDOWS IMPORTS
 // ===============================
@@ -12,21 +13,18 @@ use windows_sys::Win32::System::Diagnostics::Debug::{
 };
 
 #[cfg(windows)]
-use windows_sys::Win32::Foundation::{
-    EXCEPTION_CONTINUE_EXECUTION,
-};
-
-#[cfg(windows)]
 use windows_sys::Win32::System::Threading::ExitProcess;
 
-
+use std::ptr;
+static mut LAST_VEH: *mut std::ffi::c_void = ptr::null_mut();
+const EXCEPTION_CONTINUE_EXECUTION: i32 = -1;
 
 // ===============================
 // EXCEPTION FILTER
 // ===============================
 
 #[cfg(windows)]
-unsafe extern "system" fn unhandled_exception_filter(exception_info: *mut EXCEPTION_POINTERS) -> i32
+unsafe extern "system" fn unhandled_exception_filter(exception_info: *const windows_sys::Win32::System::Diagnostics::Debug::EXCEPTION_POINTERS) -> i32 
 {
     if !exception_info.is_null()
     {
@@ -45,7 +43,6 @@ unsafe extern "system" fn unhandled_exception_filter(exception_info: *mut EXCEPT
             }
         }
     }
-
     EXCEPTION_CONTINUE_EXECUTION
 }
 
