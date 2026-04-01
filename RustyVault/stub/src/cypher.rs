@@ -1,5 +1,6 @@
 use std::ffi::CString;
 use std::ptr;
+#[cfg(target_os = "windows")]
 use winapi::um::libloaderapi::{GetProcAddress,GetModuleHandleA};
 
 pub struct RogueCipher {
